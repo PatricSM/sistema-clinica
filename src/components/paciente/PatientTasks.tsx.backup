@@ -1,0 +1,287 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import { TarefaPaciente, TaskType } from '@/types';
+import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+
+interface PatientTasksProps {
+  patientId: number;
+}
+
+interface TaskWithProfessional extends TarefaPaciente {
+  professional_name?: string;
+}
+
+export default function PatientTasks({ patientId }: PatientTasksProps) {
+  const [tasks, setTasks] = useState<TaskWithProfessional[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeView, setActiveView] = useState<'pending' | 'completed' | 'messages'>('pending');
+
+  useEffect(() => {
+    fetchTasks();
+  }, [patientId]);
+
+  const fetchTasks = async () => {
+    setLoading(true);
+    try {
+      // Buscar tarefas básicas
+      const { data: tasksData, error: tasksError } = await supabase
+        .from('patient_tasks')
+        .select('*')
+        .eq('patient_id', patientId)
+        .order('created_at', { ascending: false });
+
+      if (tasksError) throw tasksError;
+
+      // Buscar informações dos profissionais
+      const professionalIds = [...new Set(tasksData?.map(task => task.professional_id) || [])];
+      
+      const { data: professionalsData, error: profError } = await supabase
+        .from('professionals')
+        .select(`
+          id,
+          user:users!user_id (
+            full_name
+          )
+        `)
+        .in('id', professionalIds);
+
+      if (profError) throw profError;
+
+      // Combinar dados
+      const tasksWithProfessionals = tasksData?.map(task => {
+        const professional = professionalsData?.find(p => p.id === task.professional_id);
+        return {
+          ...task,
+          professional_name: professional?.user?.full_name || 'Psicólogo'
+        };
+      }) || [];
+
+      setTasks(tasksWithProfessionals);
+    } catch (error) {
+      console.error('Erro ao buscar tarefas:', error);
+      // Fallback: mostrar apenas as tarefas sem nome do profissional
+      const { data: fallbackData } = await supabase
+        .from('patient_tasks')
+        .select('*')
+        .eq('patient_id', patientId)
+        .order('created_at', { ascending: false });
+      
+      setTasks(fallbackData?.map(task => ({ ...task, professional_name: 'Psicólogo' })) || []);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCompleteTask = async (taskId: number) => {
+    try {
+      const { error } = await supabase
+        .from('patient_tasks')
+        .update({ 
+          is_completed: true,
+          completed_at: new Date().toISOString()
+        })
+        .eq('id', taskId);
+
+      if (error) throw error;
+      fetchTasks();
+    } catch (error) {
+      console.error('Erro ao completar tarefa:', error);
+    }
+  };
+
+  const getTypeIcon = (type: TaskType) => {
+    switch (type) {
+      case 'task': return '📋';
+      case 'message': return '💬';
+      case 'questionnaire': return '📝';
+      case 'scale': return '📊';
+      default: return '📋';
+    }
+  };
+
+  const getTypeLabel = (type: TaskType) => {
+    switch (type) {
+      case 'task': return 'Tarefa';
+      case 'message': return 'Mensagem';
+      case 'questionnaire': return 'Questionário';
+      case 'scale': return 'Escala';
+      default: return 'Tarefa';
+    }
+  };
+
+  const getPriorityColor = (task: TarefaPaciente) => {
+    if (task.is_completed) return 'bg-green-100 text-green-800';
+    
+    if (task.due_date) {
+      const dueDate = new Date(task.due_date);
+      const today = new Date();
+      const diffDays = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
+      
+      if (diffDays < 0) return 'bg-red-100 text-red-800'; // Atrasada
+      if (diffDays <= 1) return 'bg-orange-100 text-orange-800'; // Urgente
+    }
+    
+    return 'bg-blue-100 text-blue-800'; // Normal
+  };
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'Sem prazo';
+    return new Date(dateString).toLocaleDateString('pt-BR');
+  };
+
+  const filterTasks = (filterType: 'pending' | 'completed' | 'messages') => {
+    switch (filterType) {
+      case 'pending':
+        return tasks.filter(task => !task.is_completed && task.task_type !== 'message');
+      case 'completed':
+        return tasks.filter(task => task.is_completed);
+      case 'messages':
+        return tasks.filter(task => task.task_type === 'message');
+      default:
+        return tasks;
+    }
+  };
+
+  const filteredTasks = filterTasks(activeView);
+  const pendingCount = tasks.filter(task => !task.is_completed && task.task_type !== 'message').length;
+  const completedCount = tasks.filter(task => task.is_completed).length;
+  const messagesCount = tasks.filter(task => task.task_type === 'message').length;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Minhas Tarefas & Mensagens</h2>
+        <p className="text-gray-600">Acompanhe suas atividades e mensagens do seu psicólogo</p>
+      </div>
+
+      <div className="flex justify-center">
+        <div className="flex bg-gray-100 rounded-lg p-1 space-x-1">
+          <Button
+            onClick={() => setActiveView('pending')}
+            variant={activeView === 'pending' ? 'primary' : 'secondary'}
+            className="px-4 py-2 text-sm"
+          >
+            📋 Pendentes ({pendingCount})
+          </Button>
+          <Button
+            onClick={() => setActiveView('completed')}
+            variant={activeView === 'completed' ? 'primary' : 'secondary'}
+            className="px-4 py-2 text-sm"
+          >
+            ✅ Concluídas ({completedCount})
+          </Button>
+          <Button
+            onClick={() => setActiveView('messages')}
+            variant={activeView === 'messages' ? 'primary' : 'secondary'}
+            className="px-4 py-2 text-sm"
+          >
+            💬 Mensagens ({messagesCount})
+          </Button>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        {filteredTasks.length === 0 ? (
+          <Card className="p-8 text-center">
+            <div className="text-gray-400 mb-4">
+              {activeView === 'pending' && '📋'}
+              {activeView === 'completed' && '✅'}
+              {activeView === 'messages' && '💬'}
+            </div>
+            <p className="text-gray-500">
+              {activeView === 'pending' && 'Parabéns! Você não tem tarefas pendentes.'}
+              {activeView === 'completed' && 'Ainda não há tarefas concluídas.'}
+              {activeView === 'messages' && 'Não há mensagens do seu psicólogo.'}
+            </p>
+          </Card>
+        ) : (
+          filteredTasks.map((task) => {
+            const priorityColor = getPriorityColor(task);
+            
+            return (
+              <Card key={task.id} className="p-4 hover:shadow-md transition-shadow">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xl">{getTypeIcon(task.task_type)}</span>
+                      <span className="text-sm font-medium text-gray-600">
+                        {getTypeLabel(task.task_type)}
+                      </span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${priorityColor}`}>
+                        {task.is_completed ? 'Concluída' : 
+                         task.due_date && new Date(task.due_date) < new Date() ? 'Atrasada' :
+                         task.due_date && Math.ceil((new Date(task.due_date).getTime() - new Date().getTime()) / (1000 * 3600 * 24)) <= 1 ? 'Urgente' : 'Pendente'}
+                      </span>
+                    </div>
+                    
+                    <h3 className="font-medium text-gray-900 mb-2">
+                      {task.title}
+                    </h3>
+                    
+                    <p className="text-gray-700 mb-3">
+                      {task.description}
+                    </p>
+                    
+                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                      {task.due_date && (
+                        <span>📅 Prazo: {formatDate(task.due_date)}</span>
+                      )}
+                      <span>👨‍⚕️ {task.professional_name}</span>
+                      {task.completed_at && (
+                        <span>✅ Concluído: {formatDate(task.completed_at)}</span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-2 ml-4">
+                    {!task.is_completed && task.task_type !== 'message' && (
+                      <Button
+                        onClick={() => handleCompleteTask(task.id)}
+                        variant="primary"
+                        size="sm"
+                      >
+                        ✅ Marcar como Concluída
+                      </Button>
+                    )}
+                    
+                    {task.is_completed && (
+                      <div className="flex items-center text-green-600">
+                        <span className="text-2xl">✅</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            );
+          })
+        )}
+      </div>
+
+      {activeView === 'pending' && pendingCount > 0 && (
+        <Card className="p-4 bg-blue-50 border-blue-200">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">💪</span>
+            <div>
+              <h4 className="font-medium text-blue-900">Continue assim!</h4>
+              <p className="text-blue-700 text-sm">
+                Você tem {pendingCount} tarefa{pendingCount > 1 ? 's' : ''} pendente{pendingCount > 1 ? 's' : ''}. 
+                Cada tarefa concluída é um passo importante no seu tratamento.
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+} 
