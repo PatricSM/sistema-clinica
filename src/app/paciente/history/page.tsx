@@ -82,11 +82,11 @@ export default function HistoryPage() {
       const entries: HistoryEntry[] = appointments?.map(apt => ({
         id: apt.id.toString(),
         date: apt.start_time,
-        title: `Consulta com ${apt.professionals.users.full_name}`,
+        title: `Consulta com ${(apt.professionals as any)?.users?.full_name || 'Profissional'}`,
         description: apt.notes || `Consulta - ${new Date(apt.start_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`,
         status: apt.status === 'completed' ? 'completed' : 
                 apt.status === 'cancelled' || apt.status === 'no_show' ? 'missed' : 'pending',
-        professional_name: apt.professionals.users.full_name
+        professional_name: (apt.professionals as any)?.users?.full_name || 'Profissional'
       })) || [];
 
       setHistoryEntries(entries);

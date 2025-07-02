@@ -104,8 +104,8 @@ const AnalyticsAdvanced = () => {
 
       const revenueByService = Object.entries(serviceRevenue).map(([service, revenue]) => ({
         service,
-        revenue,
-        percentage: totalRevenue > 0 ? (revenue / totalRevenue) * 100 : 0
+        revenue: revenue as number,
+        percentage: totalRevenue > 0 ? ((revenue as number) / totalRevenue) * 100 : 0
       }));
 
       // Distribuição etária (simulada)
@@ -136,7 +136,7 @@ const AnalyticsAdvanced = () => {
       }));
 
       // Performance dos profissionais (baseado nos appointments)
-      const professionalStats = {};
+      const professionalStats: Record<string, { appointments: number; revenue: number }> = {};
       appointments.forEach(apt => {
         const profId = apt.professional_id;
         if (!professionalStats[profId]) {

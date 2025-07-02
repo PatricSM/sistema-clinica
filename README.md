@@ -93,10 +93,41 @@ npm install
 
 ### **2. Configure Variáveis de Ambiente**
 ```bash
-# Crie .env.local com:
+# Copie o template:
+cp .env.example .env
+
+# Configure suas credenciais no arquivo .env:
+# Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+
+# JWT Configuration
+JWT_SECRET=your-jwt-secret-key-here
+
+# Environment
+NODE_ENV=development
 ```
+
+#### **📋 Variáveis Obrigatórias:**
+- `NEXT_PUBLIC_SUPABASE_URL`: URL do seu projeto Supabase
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Chave anônima do Supabase
+- `JWT_SECRET`: Chave secreta para tokens JWT (use uma chave forte)
+
+#### **📋 Variáveis Opcionais:**
+- `SUPABASE_SERVICE_ROLE_KEY`: Para operações administrativas
+- `NEXTAUTH_URL`: URL base da aplicação (padrão: http://localhost:3000)
+- `NEXTAUTH_SECRET`: Chave secreta do NextAuth
+- `SMTP_*`: Configurações de email
+- `MAX_FILE_SIZE`: Tamanho máximo de upload
+
+#### **🔑 Como obter as credenciais do Supabase:**
+1. Acesse [supabase.com](https://supabase.com) e faça login
+2. Crie um novo projeto ou selecione um existente
+3. Vá para **Settings** > **API**
+4. Copie as informações:
+   - `Project URL` → `NEXT_PUBLIC_SUPABASE_URL`
+   - `anon public` → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `service_role` → `SUPABASE_SERVICE_ROLE_KEY`
 
 ### **3. Configure o Banco de Dados**
 Execute o conteúdo do arquivo `database-complete.sql` no SQL Editor do Supabase.

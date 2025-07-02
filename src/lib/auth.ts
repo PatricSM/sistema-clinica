@@ -1,6 +1,14 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { supabase } from './supabase';
+import { createClient } from '@supabase/supabase-js';
+
+// Cliente Supabase especial para operações de autenticação
+// Usa a mesma configuração mas com contexto de service
+const authSupabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://swnwsxfqndhcezshrivv.supabase.co',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN3bndzeGZxbmRoY2V6c2hyaXZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEwNjE0NjcsImV4cCI6MjA2NjYzNzQ2N30.k8NB4DFSDYpLtSFFR21C0wZLtEICCBxmqRiGdVAVoCg'
+);
 
 // Chave secreta para JWT - em produção, usar variável de ambiente
 const JWT_SECRET = process.env.JWT_SECRET || 'sua-chave-secreta-super-segura-2024';
@@ -77,7 +85,7 @@ export function verifyToken(token: string): any {
 // Buscar usuário por email
 export async function getUserByEmail(email: string): Promise<User | null> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await authSupabase
       .from('users')
       .select('*')
       .eq('email', email.toLowerCase())
@@ -85,6 +93,7 @@ export async function getUserByEmail(email: string): Promise<User | null> {
       .single();
 
     if (error || !data) {
+      console.log('❌ Erro ao buscar usuário:', error);
       return null;
     }
 
@@ -132,9 +141,11 @@ export async function updateLastLogin(userId: number): Promise<void> {
 export async function authenticateUser(credentials: LoginCredentials): Promise<AuthResponse> {
   try {
     const { email, password } = credentials;
+    console.log('🔐 Iniciando autenticação para:', email);
 
     // Validações básicas
     if (!email || !password) {
+      console.log('❌ Dados incompletos - email ou senha em branco');
       return {
         success: false,
         message: 'Email e senha são obrigatórios'
@@ -142,13 +153,17 @@ export async function authenticateUser(credentials: LoginCredentials): Promise<A
     }
 
     // Buscar usuário
+    console.log('🔍 Buscando usuário por email...');
     const user = await getUserByEmail(email);
     if (!user) {
+      console.log('❌ Usuário não encontrado para o email:', email);
       return {
         success: false,
         message: 'Credenciais inválidas'
       };
     }
+    
+    console.log('✅ Usuário encontrado:', { id: user.id, email: user.email, role: user.role });
 
     // Verificar se a conta está ativa
     if (!user.is_active) {
@@ -159,21 +174,27 @@ export async function authenticateUser(credentials: LoginCredentials): Promise<A
     }
 
     // Verificar senha
-    const { data: userWithPassword } = await supabase
+    console.log('🔒 Verificando senha...');
+    const { data: userWithPassword } = await authSupabase
       .from('users')
       .select('password_hash')
       .eq('id', user.id)
       .single();
 
     if (!userWithPassword?.password_hash) {
+      console.log('❌ Hash da senha não encontrado no banco');
       return {
         success: false,
         message: 'Credenciais inválidas'
       };
     }
-
+    
+    console.log('🔍 Hash encontrado, comparando senhas...');
     const isPasswordValid = await verifyPassword(password, userWithPassword.password_hash);
+    console.log('🔑 Resultado da verificação de senha:', isPasswordValid);
+    
     if (!isPasswordValid) {
+      console.log('❌ Senha inválida para o usuário:', email);
       return {
         success: false,
         message: 'Credenciais inválidas'

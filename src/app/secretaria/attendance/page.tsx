@@ -189,31 +189,31 @@ export default function SecretaryAttendancePage() {
                         </div>
 
                         <div className="ml-4 flex flex-col gap-2">
-                          {attendance.status === 'agendado' && (
+                          {attendance.status === 'scheduled' && (
                             <button
-                              onClick={() => updateAttendanceStatus(attendance.id, 'confirmado')}
+                              onClick={() => updateAttendanceStatus(attendance.id, 'confirmed')}
                               className="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
                             >
                               Confirmar
                             </button>
                           )}
                           
-                          {(attendance.status === 'agendado' || attendance.status === 'confirmado') && (
+                          {(attendance.status === 'scheduled' || attendance.status === 'confirmed') && (
                             <>
                               <button
-                                onClick={() => updateAttendanceStatus(attendance.id, 'realizado')}
+                                onClick={() => updateAttendanceStatus(attendance.id, 'completed')}
                                 className="px-3 py-1 text-xs bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors"
                               >
                                 Presente
                               </button>
                               <button
-                                onClick={() => updateAttendanceStatus(attendance.id, 'ausencia')}
+                                onClick={() => updateAttendanceStatus(attendance.id, 'no_show')}
                                 className="px-3 py-1 text-xs bg-orange-600 text-white rounded hover:bg-orange-700 transition-colors"
                               >
                                 Ausência
                               </button>
                               <button
-                                onClick={() => updateAttendanceStatus(attendance.id, 'cancelado')}
+                                onClick={() => updateAttendanceStatus(attendance.id, 'cancelled')}
                                 className="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
                               >
                                 Cancelar

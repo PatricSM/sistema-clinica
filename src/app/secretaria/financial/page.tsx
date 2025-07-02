@@ -58,7 +58,7 @@ export default function SecretaryFinancialPage() {
         description: `Consulta - ${new Date(transaction.transaction_date).toLocaleDateString('pt-BR')}`,
         amount: parseFloat(transaction.amount),
         date: transaction.transaction_date,
-        status: transaction.status === 'paid' ? 'pago' : transaction.status === 'pending' ? 'pendente' : 'atrasado',
+        status: (transaction.status === 'paid' ? 'paid' : transaction.status === 'pending' ? 'pending' : 'overdue') as 'paid' | 'pending' | 'overdue',
         payment_method: transaction.payment_method
       }))
 
@@ -72,11 +72,11 @@ export default function SecretaryFinancialPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pago':
+      case 'paid':
         return 'bg-green-100 text-green-800 border-green-200'
-      case 'pendente':
+      case 'pending':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200'
-      case 'atrasado':
+      case 'overdue':
         return 'bg-red-100 text-red-800 border-red-200'
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200'
@@ -85,11 +85,11 @@ export default function SecretaryFinancialPage() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'pago':
+      case 'paid':
         return <CheckCircleIcon className="h-4 w-4" />
-      case 'pendente':
+      case 'pending':
         return <ClockIcon className="h-4 w-4" />
-      case 'atrasado':
+      case 'overdue':
         return <ExclamationTriangleIcon className="h-4 w-4" />
       default:
         return null
@@ -105,9 +105,9 @@ export default function SecretaryFinancialPage() {
 
   const stats = {
     total: transactions.reduce((sum, t) => sum + t.amount, 0),
-    pago: transactions.filter(t => t.status === 'pago').reduce((sum, t) => sum + t.amount, 0),
-    pendente: transactions.filter(t => t.status === 'pendente').reduce((sum, t) => sum + t.amount, 0),
-    atrasado: transactions.filter(t => t.status === 'atrasado').reduce((sum, t) => sum + t.amount, 0),
+    paid: transactions.filter(t => t.status === 'paid').reduce((sum, t) => sum + t.amount, 0),
+    pending: transactions.filter(t => t.status === 'pending').reduce((sum, t) => sum + t.amount, 0),
+    overdue: transactions.filter(t => t.status === 'overdue').reduce((sum, t) => sum + t.amount, 0),
   }
 
   const formatCurrency = (value: number) => {
@@ -133,15 +133,15 @@ export default function SecretaryFinancialPage() {
               <div className="text-sm text-gray-600">Total Arrecadado</div>
             </div>
             <div className="bg-white rounded-lg p-4 border border-green-200">
-              <div className="text-2xl font-bold text-green-600">{formatCurrency(stats.pago)}</div>
+              <div className="text-2xl font-bold text-green-600">{formatCurrency(stats.paid)}</div>
               <div className="text-sm text-green-600">Pago</div>
             </div>
             <div className="bg-white rounded-lg p-4 border border-yellow-200">
-              <div className="text-2xl font-bold text-yellow-600">{formatCurrency(stats.pendente)}</div>
+              <div className="text-2xl font-bold text-yellow-600">{formatCurrency(stats.pending)}</div>
               <div className="text-sm text-yellow-600">Pendente</div>
             </div>
             <div className="bg-white rounded-lg p-4 border border-red-200">
-              <div className="text-2xl font-bold text-red-600">{formatCurrency(stats.atrasado)}</div>
+              <div className="text-2xl font-bold text-red-600">{formatCurrency(stats.overdue)}</div>
               <div className="text-sm text-red-600">Atrasado</div>
             </div>
           </div>
@@ -168,9 +168,9 @@ export default function SecretaryFinancialPage() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                 >
                   <option value="all">Todos</option>
-                  <option value="pago">Pago</option>
-                  <option value="pendente">Pendente</option>
-                  <option value="atrasado">Atrasado</option>
+                  <option value="paid">Pago</option>
+                  <option value="pending">Pendente</option>
+                  <option value="overdue">Atrasado</option>
                 </select>
               </div>
             </div>

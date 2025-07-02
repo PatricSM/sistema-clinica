@@ -82,7 +82,7 @@ export default function MessagesPage() {
       // Transformar tarefas em mensagens
       const taskMessages: Message[] = tasks?.map(task => ({
         id: task.id,
-        professional_name: task.professionals.users.full_name,
+        professional_name: (task.professionals as any)?.users?.full_name || 'Profissional',
         content: task.description || task.title,
         created_at: task.created_at,
         read: task.is_completed, // Se foi marcada como concluída, consideramos como lida

@@ -78,16 +78,20 @@ export default function MedicalDocumentsPage() {
       console.error('Erro ao buscar documentos:', error)
     } else {
       // Transformação para o tipo de dado esperado
-      const transformedData = data.map((doc: any) => ({
-        id: doc.id,
-        title: doc.title,
-        type: doc.document_type,
-        patient_id: doc.patient_id,
-        patient_name: doc.patients.users.full_name,
-        created_at: doc.created_at,
-        status: doc.signed_by_patient ? 'viewed' : 'sent',
-        notes: `Documento tipo: ${doc.document_type}`,
-      }))
+      const transformedData = data.map((doc: any) => {
+        const status: 'draft' | 'sent' | 'viewed' = doc.signed_by_patient ? 'viewed' : 'sent'
+        
+        return {
+          id: doc.id,
+          title: doc.title,
+          type: doc.document_type,
+          patient_id: doc.patient_id,
+          patient_name: doc.patients.users.full_name,
+          created_at: doc.created_at,
+          status,
+          notes: `Documento tipo: ${doc.document_type}`,
+        }
+      })
       setDocuments(transformedData)
     }
     setLoading(false)

@@ -64,9 +64,9 @@ export function AgendaManager({ className }: AgendaManagerProps) {
       if (error) throw error
 
       const colors = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444']
-      const professionalData: ProfessionalInfo[] = data?.map((prof, index) => ({
+      const professionalData: ProfessionalInfo[] = data?.map((prof: any, index) => ({
         id: prof.id,
-        name: prof.users.full_name,
+        name: prof.users?.full_name || 'Nome não disponível',
         specialty: prof.specialty || 'Psicologia',
         color: colors[index % colors.length]
       })) || []
@@ -103,7 +103,7 @@ export function AgendaManager({ className }: AgendaManagerProps) {
 
       if (error) throw error
 
-      const consultaData = data?.map(apt => {
+      const consultaData = data?.map((apt: any) => {
         const startTime = new Date(apt.start_time)
         const endTime = new Date(apt.end_time)
         const duration = Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60))
@@ -118,8 +118,8 @@ export function AgendaManager({ className }: AgendaManagerProps) {
           notes: apt.notes,
           created_at: apt.created_at,
           updated_at: apt.updated_at,
-          patient_name: apt.patient.user.full_name,
-          professional_name: apt.professional.users.full_name,
+          patient_name: apt.patient?.user?.full_name || 'Paciente não identificado',
+          professional_name: apt.professional?.users?.full_name || 'Profissional não identificado',
           duration
         }
       }) || []

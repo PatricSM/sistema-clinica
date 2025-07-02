@@ -102,9 +102,9 @@ const AdvancedAgendaManager = () => {
       if (error) throw error;
 
       const colors = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444'];
-      const professionalData: Professional[] = data?.map((prof, index) => ({
+      const professionalData: Professional[] = data?.map((prof: any, index) => ({
         id: prof.id.toString(),
-        name: prof.users.full_name,
+        name: prof.users?.full_name || 'Nome não disponível',
         specialty: prof.specialty || 'Psicologia',
         color: colors[index % colors.length],
         workingHours: prof.working_hours || {
@@ -147,17 +147,17 @@ const AdvancedAgendaManager = () => {
 
       if (error) throw error;
 
-      const appointmentData: Appointment[] = data?.map(apt => {
+      const appointmentData: Appointment[] = data?.map((apt: any) => {
         const startTime = new Date(apt.start_time);
         const endTime = new Date(apt.end_time);
         const duration = Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60));
 
         return {
           id: apt.id.toString(),
-          patientId: apt.patient.id.toString(),
-          patientName: apt.patient.user.full_name,
-          professionalId: apt.professional.id.toString(),
-          professionalName: apt.professional.users.full_name,
+          patientId: apt.patient?.id?.toString() || '',
+          patientName: apt.patient?.user?.full_name || 'Nome não disponível',
+          professionalId: apt.professional?.id?.toString() || '',
+          professionalName: apt.professional?.users?.full_name || 'Profissional não disponível',
           date: dateStr,
           startTime: startTime.toTimeString().slice(0, 5),
           endTime: endTime.toTimeString().slice(0, 5),
@@ -165,7 +165,7 @@ const AdvancedAgendaManager = () => {
           status: apt.status as any,
           type: 'Consulta',
           notes: apt.notes,
-          phone: apt.patient.user.phone,
+          phone: apt.patient?.user?.phone,
           value: 200, // Valor padrão
           createdAt: apt.start_time,
           updatedAt: apt.start_time

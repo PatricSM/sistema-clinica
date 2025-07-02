@@ -99,7 +99,7 @@ export default function MessagesPage() {
       const taskMessages: Message[] = tasks?.map(task => ({
         id: task.id,
         patient_id: task.patient_id,
-        patient_name: task.patient.user.full_name,
+        patient_name: (task.patient as any)?.user?.full_name || 'Paciente',
         content: task.description || task.title,
         created_at: task.created_at,
         read: task.is_completed,
