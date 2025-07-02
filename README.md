@@ -67,8 +67,10 @@ Sistema **100% completo** de gestão para clínicas de psicologia com **autentic
 ### **Backend & Banco**
 - **Supabase** - Backend-as-a-Service
 - **PostgreSQL** - Banco de dados relacional
-- **Row Level Security** - Segurança granular
-- **Triggers** - Automação de timestamps
+- **Row Level Security** - Segurança granular com políticas otimizadas
+- **Triggers** - Automação de timestamps e auditoria
+- **Índices Otimizados** - Performance aprimorada
+- **Autenticação JWT** - Sistema de sessão personalizado
 
 ### **Ferramentas**
 - **ESLint** - Linting de código
@@ -97,7 +99,13 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 ```
 
 ### **3. Configure o Banco de Dados**
-Execute o conteúdo do arquivo `postgres.sql` no SQL Editor do Supabase.
+Execute o conteúdo do arquivo `database-complete.sql` no SQL Editor do Supabase.
+
+> 🔥 **NOVO**: Use o arquivo `database-complete.sql` atualizado com:
+> - Segurança RLS completa
+> - Performance otimizada
+> - 6 usuários demo funcionais
+> - Todas as 15 tabelas necessárias
 
 ### **4. Execute o Projeto**
 ```bash
@@ -173,14 +181,39 @@ sistema-clinica/
 │   ├── contexts/               # Contexto de Autenticação
 │   ├── lib/                    # Supabase Client
 │   └── types/                  # Tipos TypeScript
-├── postgres.sql              # Schema do Banco
+├── postgres.sql              # Schema do Banco (legado)
+├── database-complete.sql     # Schema COMPLETO com RLS e Performance
 ├── FUNCIONALIDADES.md        # Documentação detalhada
 └── README.md                 # Este arquivo
 ```
 
 ## 🔧 Correções Recentes (Julho 2025)
 
-### ✅ **Problemas Corrigidos**
+### 🔐 **CORREÇÕES DE SEGURANÇA E PERFORMANCE (MCP Supabase) - NOVO**
+
+#### 🛡️ **Segurança**
+- **Row Level Security (RLS)**: Habilitado em todas as 15 tabelas
+- **Políticas de Acesso**: Implementadas políticas granulares por tipo de usuário
+- **Autenticação Personalizada**: Sistema auth configurado com JWT para controle de sessão
+- **Isolamento de Dados**: Pacientes só acessam seus próprios dados
+- **Controle de Permissões**: Admin tem acesso total, médicos só aos próprios pacientes
+- **Logs de Auditoria**: Sistema de rastreamento implementado para todas as operações
+
+#### ⚡ **Performance**
+- **Índices Otimizados**: Criados índices compostos para consultas frequentes
+- **Triggers Automáticos**: Implementação de `updated_at` automático
+- **Políticas RLS Otimizadas**: Queries eficientes baseadas no usuário logado
+- **Relacionamentos Refinados**: Foreign keys com CASCADE apropriado
+- **Cache de Consultas**: Estrutura preparada para cache de queries frequentes
+
+#### 🗄️ **Banco de Dados Atualizado**
+- **15 Tabelas Completas**: Schema atualizado com todas as funcionalidades
+- **Dados Demo Atualizados**: 6 usuários funcionais para teste
+- **Relacionamentos Consistentes**: Integridade referencial garantida
+- **Comentários Documentados**: Todas as tabelas e colunas documentadas
+- **Arquivo `database-complete.sql`**: Script completo de instalação atualizado
+
+### ✅ **Problemas Previamente Corrigidos**
 - **Menu Lateral Ausente**: Adicionado MainLayout em todas as páginas
 - **Dashboard Administrativo**: Removidos botões desnecessários do topo
 - **Erros de Build**: Corrigidos problemas de sintaxe JSX e encoding
